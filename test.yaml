@@ -1,0 +1,9 @@
+PATHS:
+  # Files produced with EddyIdentification
+  FILES_PATTERN: .\Data\original\*.nc
+  SAVE_DIR: .\Data\output
+
+# Number of consecutive timesteps with missing detection allowed
+VIRTUAL_LENGTH_MAX: 3
+# Minimal number of timesteps to considered as a long trajectory
+TRACK_DURATION_MIN: 5

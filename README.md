@@ -1,92 +1,137 @@
 # SRJ_Proj
 
+## 项目描述
 
+本项目是一个海洋涡流检测和跟踪系统，使用卫星海面高度异常（Sea Level Anomaly, SLA）数据来识别和分析海洋中的涡流（eddies）。项目基于PyEddyTracker库，处理全球卫星数据，检测反气旋涡流（Anticyclonic Eddies）和气旋涡流（Cyclonic Eddies），并生成可视化图表和统计分析。
 
-## Getting started
+### 主要功能
+- **数据预处理**：使用CDO工具裁剪卫星数据到指定区域（70°E-100°E, -5°N-23°N）
+- **涡流检测**：基于海面高度异常和高通滤波识别涡流
+- **涡流跟踪**：跟踪涡流的时间演变和运动轨迹
+- **可视化**：生成涡流分布图、统计直方图和时间序列图
+- **数据输出**：保存涡流数据为NetCDF格式
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+### 数据流程
+1. 输入全球卫星SLA数据（dt_global_twosat_phy_l4_*.nc）
+2. 裁剪到研究区域
+3. 应用高通滤波去除大尺度信号
+4. 检测涡流（AC和CC）
+5. 过滤满足半径和振幅阈值的涡流
+6. 生成输出文件和图表
+7. 跟踪涡流并进行统计分析
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## 安装和依赖
 
-## Add your files
+### 系统要求
+- Python 3.7+
+- Linux/Windows (支持CDO工具)
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+### 依赖包
+- py-eddy-tracker
+- matplotlib
+- cartopy
+- numpy
+- netCDF4
+- numba
 
+### 安装步骤
+1. 克隆项目：
+   ```bash
+   git clone https://git.hxlab.tech/yuhanxue/srj_proj.git
+   cd srj_proj
+   ```
+
+2. 安装Python依赖：
+   ```bash
+   pip install py-eddy-tracker matplotlib cartopy numpy netCDF4 numba
+   ```
+
+3. 安装CDO工具（用于数据预处理）：
+   - Linux: `sudo apt install cdo`
+   - Windows: 使用WSL或Miniconda安装
+
+## 使用方法
+
+### 数据准备
+将原始卫星数据放置在 `Data/original/` 目录下。
+
+### 运行涡流检测
+使用 `0401/prog.eddy_detect_plot.py` 脚本：
+
+```bash
+python 0401/0401/prog.eddy_detect_plot.py \
+  ./Data/original/ \          # 输入目录
+  ./Data/output/ \            # 输出目录
+  dt_global_twosat_phy_l4_{}.vDT2021.nc \  # 文件模式
+  %Y%m%d \                    # 日期格式
+  sla \                       # 变量名
+  19930101 \                  # 起始日期
+  19930131 \                  # 结束日期
+  t001 \                      # 网格标识
+  1 \                         # 保存NC文件 (1=是)
+  1 \                         # 生成图表 (1=是)
+  longitude \                  # X轴名称
+  latitude \                   # Y轴名称
+  {} \                        # 日期占位符
+  400 \                       # 波长 (km)
+  10 \                        # 最小半径 (km)
+  0.01                        # 最小振幅 (m)
 ```
-cd existing_repo
-git remote add origin https://git.hxlab.tech/yuhanxue/srj_proj.git
-git branch -M main
-git push -uf origin main
+
+### 涡流跟踪和分析
+运行 `main.ipynb` Jupyter Notebook：
+1. 加载检测到的涡流数据
+2. 执行涡流跟踪
+3. 生成统计图表和可视化
+
+## 输出文件结构
+```
+Data/output/
+├── sla.AC.t001/          # 反气旋涡流数据
+│   ├── AC.all.19930101.nc    # 所有检测到的AC涡流
+│   └── AC.req.19930101.nc    # 满足阈值的AC涡流
+├── sla.CC.t001/          # 气旋涡流数据
+│   ├── CC.all.19930101.nc
+│   └── CC.req.19930101.nc
+└── sla.jpgs.t001/        # 可视化图表
+    └── PET.sla.19930101.jpg
 ```
 
-## Integrate with your tools
+## 参数说明
+- **波长 (wave_length)**: 高通滤波的截止波长，单位km
+- **最小半径 (radius_MIN)**: 涡流最小半径阈值，单位km
+- **最小振幅 (amplitude_MIN)**: 涡流最小振幅阈值，单位m
+- **区域**: 70°E-100°E, -5°N-23°N (印度洋北部)
 
-- [ ] [Set up project integrations](http://192.168.51.66:30080/yuhanxue/srj_proj/-/settings/integrations)
+## 后期维护
 
-## Collaborate with your team
+### 数据更新
+1. 下载新的卫星SLA数据
+2. 放置在 `Data/original/` 目录
+3. 更新脚本中的日期范围
+4. 重新运行检测脚本
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+### 参数调整
+根据研究需要调整涡流检测参数：
+- 修改 `wave_length` 以改变滤波尺度
+- 调整 `radius_MIN` 和 `amplitude_MIN` 阈值
+- 更改研究区域坐标
 
-## Test and Deploy
+### 代码维护
+1. 定期更新依赖包版本
+2. 测试新版本PyEddyTracker的兼容性
+3. 优化性能和内存使用
 
-Use the built-in continuous integration in GitLab.
+### 常见问题
+- **CDO命令失败**: 确保CDO已正确安装，路径正确
+- **内存不足**: 对于大时间范围，考虑分批处理
+- **坐标系统**: 确保输入数据的坐标系统与脚本匹配
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### 贡献
+欢迎提交问题报告和改进建议。请在提交PR前测试代码。
 
-***
+## 许可证
+[请指定许可证]
 
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+## 联系
+[请添加联系信息]
